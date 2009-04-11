@@ -1,5 +1,8 @@
-# Use Git for deployment - git-specific options
-# default_run_options[:pty] = true
+set :stages, %w(testing production) 
+set :default_stage, 'testing' 
+set :stage_dir, "deploy/stages"
+require 'capistrano/ext/multistage' 
+
 set :scm, "git"
 set :repository,  "git://github.com/ajturner/ushahidi.git"
 set :branch, "votereportin"
@@ -9,7 +12,6 @@ set :git_shallow_clone, 1
 # Ushahidi isn't a Rails app, so assets aren't in public/javascript, et al.
 set :normalize_asset_timestamps, false
 
-set :user,  "root"
 set :use_sudo, false
 set :runner, nil
 # set :group, "wheel"
@@ -18,32 +20,24 @@ ssh_options[:compression] = false
 set :application, "ushahidi"
 set :keep_releases, 3
 
-role :app, "votereport.in"
-role :web, "votereport.in"
-role :daemons, "votereport.in"
-#role :voip, "voip.votereport.us"
-role :db, "votereport.in", :primary=>true
-
-set :deploy_to, "/var/www/#{application}"
-
 namespace :deploy do
   task :set_permissions do
     run "chown -R nobody:nobody #{current_path}/"    
   end
   
   task :start do
-    # run "/etc/init.d/apache2 restart"
+    run "/etc/init.d/apache2 restart"
   end
   desc "Restart Application"
   task :restart, :roles => :app do
-    # run "/etc/init.d/apache2 restart"
+    run "/etc/init.d/apache2 restart"
   end    
   
   task :create_directories do
     run "mkdir -p #{deploy_to} #{deploy_to}/releases #{deploy_to}/shared/system #{deploy_to}/shared/log #{deploy_to}/shared/pids "
   end
   
-  task :setup_server do
+  # task :setup_server do
 #     passenger_config = ERB.new <<-EOF    
 # <VirtualHost *:80>
 #     ServerName #{application}.#{hostname}
@@ -52,7 +46,7 @@ namespace :deploy do
 # EOF
 #     put passenger_config.result, "/etc/httpd/sites/#{application}.conf" 
     # run "/etc/init.d/apache2 graceful"
-  end
+  # end
 
   # task :setup_database do
   #   db_config = YAML.load_file("config/database.yml")
